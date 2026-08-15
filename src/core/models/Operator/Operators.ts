@@ -9,12 +9,12 @@ export enum OperatorType {
 }
 
 const operatorPrecedence: Record<OperatorType, number> = {
-      "Add": 3,
-      "Substract": 3,
-      "Multiply": 2,
-      "Divide": 2,
-      "Power": 1,
-      "Assign": 4
+      "Assign": 1,
+      "Add": 2,
+      "Substract": 2,
+      "Multiply": 3,
+      "Divide": 3,
+      "Power": 4,
 }
 
 const lexemeToOperatorType: Record<string, OperatorType> = {
@@ -30,13 +30,18 @@ export class Operator {
       private readonly _lexeme: string
       private readonly _type: OperatorType
       private readonly _precedence: number
+      private readonly _leftAssociative: boolean
 
       constructor(lexeme: string) {
             this._lexeme = lexeme
             this._type = lexemeToOperatorType[lexeme]
             this._precedence = operatorPrecedence[this._type]
+            this._leftAssociative = lexeme !== "^"
       }
 
       get precendece() { return this._precedence }
-      get type() { return this._type}
+      get leftAssociativity() { return this._leftAssociative }
+      get type() { return this._type }
+
+      toString() { return `${this._lexeme}`}
 }

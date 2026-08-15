@@ -10,12 +10,10 @@ import { BinaryTree } from "./models/Tree/BinaryTree.ts";
 
 export class Parser {
       private _tokens: Token[];
-      private _AST: BinaryTree | null;
       private _current: number;
 
       constructor() {
             this._tokens = [];
-            this._AST = null;
             this._current = 0;
       }
 
@@ -63,25 +61,18 @@ export class Parser {
                         break;
 
                   this.advance();
-                  const right = this.parseExpression(minPrecedence + 1);
+                  const right = this.parseExpression(
+                        operator.leftAssociativity
+                              ? precedence + 1
+                              : precedence
+                        );
 
-                  left = new BinaryExpression(operator.type, left, right)
+                  left = new BinaryExpression(operator, left, right)
             }
 
             return left
       }
 
-      buildAST() {
-            let index = 0
-            let actual : Token = this._tokens[index++]
-            while (index < this._tokens.length && actual) {
-                  actual = this._tokens[index++]
-
-            }
-      }
-
       get tokens() { return this._tokens }
-      get ast() { return this._AST }
-
       set tokens(tokens: Token[]) { this._tokens = tokens }
 }
