@@ -1,14 +1,12 @@
 import { Expression } from "./models/Expressions/Expression.ts";
 import { BinaryExpression } from "./models/Expressions/kind/BinaryExpression.ts";
 import { NumericExpression } from "./models/Expressions/kind/NumericExpression.ts";
-import { toOperatorType } from "./models/Tokens/OperatorTypes.ts";
+import { Operator } from "./models/Operator/Operators.ts";
 import { Token, TokenType } from "./models/Tokens/Token.ts";
 import { BinaryTree } from "./models/Tree/BinaryTree.ts";
 
 
-/* TODO:
-“Omg tengo 2, omg le sigue un +, es una suma entonces! Que tengo a la derecha? Un 3!!, espera, ese 3 hace parte de una expresion con mas prelacion que yo? Miremos a la derecha? Omg es un asterisco, es una multiplicacion, que tengo a la derecha? Ohh un 4, entonces 3*4 es lo que tengo a mi derecha de la suma”
-*/
+
 export class Parser {
       private _tokens: Token[];
       private _AST: BinaryTree | null;
@@ -24,24 +22,35 @@ export class Parser {
       peek() { return this._tokens[this._current] }
       reverse() { return this._tokens[this._current--] }
 
-      parseUnit() : Expression {
+      parseUnitary(): Expression {
             const token = this.advance();
 
-            if (token.type === TokenType.Number ) {
+            if (token.type === TokenType.Number) {
                   return new NumericExpression(Number(token.lexeme))
             }
 
             throw new Error("Expected number")
       }
 
-      parseBinary(): Expression {
-            const left = this.parseUnit();
-            const token = this.peek();
+      parseExpression(minPrecedence: number = 1): Expression {
+            let left = this.parseUnitary();
 
-            if (token.type === TokenType.Operator ) {
-                  const operator = this.advance();
-                  const right = this.parseUnit();
-                  return new BinaryExpression(toOperatorType(operator.lexeme), left, right)
+            while (true) {
+                  const token = this.peek();
+
+                  if (!token || token.type !== TokenType.Operator)
+                        break;
+
+                  const operator = new Operator(token.lexeme);
+                  const precedence = operator.precendece;
+
+                  if (minPrecedence > precedence)
+                        break;
+
+                  this.advance();
+                  const right = this.parseExpression(minPrecedence + 1);
+
+                  left = new BinaryExpression(operator.type, left, right)
             }
 
             return left
