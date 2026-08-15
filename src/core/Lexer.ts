@@ -4,7 +4,7 @@
       y elabora una secuencia de componentes léxicos que toma el Analizador Sintáctico para hacer el análisis
 */
 import { CharHelper } from "./helpers/CharHelper.ts";
-import { Token, TokenType } from "./Tokens/Token.ts";
+import { Token, TokenType } from "./models/Tokens/Token.ts";
 
 export class Lexer {
       private _snippet: string;
@@ -71,7 +71,6 @@ export class Lexer {
             }
             return this._tokens
       }
-
 
       get snippet() { return this._snippet }
       get tokens() { return this._tokens }

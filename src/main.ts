@@ -5,4 +5,4 @@ const code = "2 + 3 * 4"
 const myCompiler = Compiler.instance
 
 myCompiler.snippet = code
-console.log(myCompiler.lexer.extractTokens())
+console.log(myCompiler.parser.tokens)

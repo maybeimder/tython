@@ -1,5 +1,5 @@
 import { BaseExpression, Expression, ExpressionKind } from "../Expression.ts";
-import { TokenType } from "../../Tokens/Token.ts";
+import { TokenType } from "../../../Tokens/Token.ts";
 
 export class NumericExpression implements BaseExpression {
       kind: ExpressionKind
