@@ -1,5 +1,6 @@
 import { NumericExpression } from "./kind/NumericExpression.ts"
 import { BinaryExpression } from "./kind/BinaryExpression.ts"
+import { IdentifierExpression } from "./kind/IdentifierExpression.ts"
 
 export interface BaseExpression {
       kind: ExpressionKind,
@@ -8,7 +9,8 @@ export interface BaseExpression {
 
 export enum ExpressionKind {
       "Numeric",
-      "Binary"
+      "Binary",
+      "Identifier"
 }
 
-export type Expression = NumericExpression | BinaryExpression
+export type Expression = NumericExpression | BinaryExpression | IdentifierExpression

@@ -24,10 +24,17 @@ export class Lexer {
       extractTokens(): Token[] {
             while (this._current < this._snippet.length) {
                   let actual = this.peek();
-                  console.log(`${this._current}: ${actual}`)
 
                   // Si es un espacio, tab o derivado.
                   if (CharHelper.isWhitespace(actual)) {
+                        this.advance();
+                        continue;
+                  }
+
+                  // Si es un delimiter
+                  else if (CharHelper.isDelimiter(actual)) {
+                        this._tokens.push(
+                              new Token(TokenType.Delimiter, actual))
                         this.advance();
                         continue;
                   }
