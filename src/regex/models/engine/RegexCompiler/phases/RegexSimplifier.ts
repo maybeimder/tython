@@ -14,35 +14,26 @@ import { ConcatStar } from "../../../../simplifier/AlgebraicRule/rules/ConcatSta
 import { UnionContainment } from "../../../../simplifier/AlgebraicRule/rules/UnionContainment.ts";
 import { UnionEpsilon } from "../../../../simplifier/AlgebraicRule/rules/UnionEpsilon.ts";
 import { SimplificationLogger } from "../../../../simplifier/result/SimplificationLogger.ts";
-import { SimplificationResult } from "../../../../simplifier/result/SimplificationResult.ts";
+import { AlgebraicRule } from "../../../../simplifier/AlgebraicRule/AlgebraicRule.ts";
 
 export class RegexSimplifier {
-      private logger: SimplificationLogger = new SimplificationLogger();
+      logger: SimplificationLogger | null
+
+      constructor() { this.logger = null }
 
       simplify(expression: RegEx): RegEx {
             let actualState = expression;
 
             while (true) {
                   let withSimplifiedChildren = this.simplifyChildren(actualState);
-
                   const nextState = this.simplifyUsingRules(withSimplifiedChildren);
 
                   if (this.equals(actualState, nextState)) return nextState;
-
                   actualState = nextState
             }
       }
-      verboseSimplify(expression: RegEx): SimplificationResult {
-            this.logger.reset();
-            const result = this.simplify(expression);
-            return {
-                  initial: expression,
-                  steps: this.logger.getSteps(),
-                  result,
-            };
-      }
-      private simplifyChildren(subexpression: RegEx): RegEx {
 
+      private simplifyChildren(subexpression: RegEx): RegEx {
             if (subexpression instanceof Concatenation)
                   return new Concatenation(subexpression.expressions.map(exp => this.simplify(exp)));
 
@@ -61,40 +52,46 @@ export class RegexSimplifier {
             return subexpression;
       }
 
+      useRule = (rule: typeof AlgebraicRule, target: RegEx): RegEx | null => {
+            const res = rule.apply(target);
+            if (res !== null && this.logger) this.logger.logStep(target, res, rule);
+            return res
+      };
+
       private simplifyUsingRules(expression: RegEx): RegEx {
             if (expression instanceof LanguageRef)
                 return expression;
 
             if (expression instanceof Plus)
-                  return PlusToStar.apply(expression) ?? expression;
+                  return this.useRule(PlusToStar, expression) ?? expression;
 
             if (expression instanceof Optional)
-                  return OptionalToUnion.apply(expression) ?? expression;
+                  return this.useRule(OptionalToUnion, expression) ?? expression;
 
             if (expression instanceof Concatenation) {
-                  let res = ConcatAsociativity.apply(expression) ?? expression;
+                  let res = this.useRule(ConcatAsociativity, expression) ?? expression;
 
                   if (res instanceof Concatenation) {
-                        res = ConcatStar.apply(res) ?? res;
+                        res = this.useRule(ConcatStar, res) ?? res;
                         // res = ConcatToPlus.apply(res) ?? res;
                   }
                 return res;
             }
 
             if (expression instanceof Union) {
-                  let res = UnionAsociativity.apply(expression) ?? expression;
+                  let res =this.useRule(UnionAsociativity, expression) ?? expression;
 
                   if (res instanceof Union)
-                           res = UnionEpsilon.apply(res) ?? res;
+                           res = this.useRule(UnionEpsilon, res) ?? res;
 
                   if (res instanceof Union)
-                           res = UnionContainment.apply(res) ?? res;
+                           res = this.useRule(UnionContainment, res) ?? res;
 
                   return res;
             }
 
             if (expression instanceof Star)
-                return StarIdempotency.apply(expression) ?? expression;
+                return this.useRule(StarIdempotency, expression) ?? expression;
 
             return expression;
       }

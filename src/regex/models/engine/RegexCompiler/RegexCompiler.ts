@@ -41,6 +41,9 @@ export class RegexCompiler extends Compiler {
             return RegexCompiler._instance;
       }
 
+      get parser() { return this._parser }
+
+
       get simplifier() { return this._simplifier }
       get alphabet() { return this._alphabet; }
 

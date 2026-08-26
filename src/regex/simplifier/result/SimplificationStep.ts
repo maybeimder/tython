@@ -5,5 +5,5 @@ export interface SimplificationStep {
       step: number;
       before: RegEx;
       after: RegEx;
-      rule: string; // nombre de la regla, ej. "ConcatStar"
+      rule: typeof AlgebraicRule;
 }

@@ -13,7 +13,15 @@ export class Compiler {
             this._parser = new Parser();
       }
 
-      c
+      public compile(){
+            if (!this._snippet) return;
+
+            this._lexer.snippet = this._snippet;
+            this._lexer.extractTokens();
+            this._parser.tokens = this._lexer.tokens;
+
+            return this._parser.parseExpression()
+      }
 
       public static get instance() : Compiler {
             if (!Compiler._instance) {

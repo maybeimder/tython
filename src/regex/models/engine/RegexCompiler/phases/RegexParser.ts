@@ -1,6 +1,3 @@
-// Assuming your AST nodes are defined:
-// LanguageRef, Plus, Star, Optional, Concatenation, Alternation
-
 import { TokenType } from "../../../../../compiler/models/Tokens/Token.ts";
 import { Parser } from "../../../../../compiler/Parser.ts";
 import { Concatenation } from "../../../regex/Concatenation.ts";
