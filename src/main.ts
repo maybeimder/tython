@@ -17,5 +17,3 @@ const resultRegex = myRegexCompiler.compile();
 
 if (resultRegex)
       console.log(SimplificationPrinter.print(myRegexCompiler.simplifier.logger.getResult(resultRegex)));
-// console.dir(myRegexCompiler.parser.parseExpression(), { depth: null });
-// console.dir(myRegexCompiler.compile(), { depth: null });

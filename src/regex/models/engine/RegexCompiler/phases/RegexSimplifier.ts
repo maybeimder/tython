@@ -82,10 +82,10 @@ export class RegexSimplifier {
                   let res =this.useRule(UnionAsociativity, expression) ?? expression;
 
                   if (res instanceof Union)
-                           res = this.useRule(UnionEpsilon, res) ?? res;
+                           res = this.useRule(UnionContainment, res) ?? res;
 
                   if (res instanceof Union)
-                           res = this.useRule(UnionContainment, res) ?? res;
+                           res = this.useRule(UnionEpsilon, res) ?? res;
 
                   return res;
             }

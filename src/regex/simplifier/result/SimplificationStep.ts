@@ -5,5 +5,6 @@ export interface SimplificationStep {
       step: number;
       before: RegEx;
       after: RegEx;
+      globalState: RegEx;
       rule: typeof AlgebraicRule;
 }
