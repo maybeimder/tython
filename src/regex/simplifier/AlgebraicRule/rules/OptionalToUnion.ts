@@ -4,8 +4,8 @@ import { RegEx } from "../../../models/regex/RegEx.ts";
 import { Union } from "../../../models/regex/Union.ts";
 import { AlgebraicRule } from "../AlgebraicRule.ts";
 
-export class OptionalToUnion implements AlgebraicRule {
-      apply(expression: RegEx): RegEx | null {
+export class OptionalToUnion extends AlgebraicRule {
+      static apply(expression: RegEx): RegEx | null {
             if (!(expression instanceof Optional)) return null;
 
             return new Union([

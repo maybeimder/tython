@@ -1,16 +1,16 @@
 // Assuming your AST nodes are defined:
 // LanguageRef, Plus, Star, Optional, Concatenation, Alternation
 
-import { TokenType } from "../../../compiler/models/Tokens/Token.ts";
-import { Parser } from "../../../compiler/Parser.ts";
-import { Concatenation } from "../regex/Concatenation.ts";
-import { Optional } from "../regex/Optional.ts";
-import { Plus } from "../regex/Plus.ts";
-import { RegEx } from "../regex/RegEx.ts";
-import { Star } from "../regex/Star.ts";
-import { Union } from "../regex/Union.ts";
-import { LanguageRef } from "../regex/Unit.ts";
-import { RegexToken } from "./RegexToken.ts";
+import { TokenType } from "../../../../../compiler/models/Tokens/Token.ts";
+import { Parser } from "../../../../../compiler/Parser.ts";
+import { Concatenation } from "../../../regex/Concatenation.ts";
+import { Optional } from "../../../regex/Optional.ts";
+import { Plus } from "../../../regex/Plus.ts";
+import { RegEx } from "../../../regex/RegEx.ts";
+import { Star } from "../../../regex/Star.ts";
+import { Union } from "../../../regex/Union.ts";
+import { LanguageRef } from "../../../regex/LanguageRef.ts";
+import { RegexToken } from "../../RegexToken.ts";
 
 export class RegexParser extends Parser {
 

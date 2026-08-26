@@ -6,11 +6,18 @@ import { AlgebraicRule } from "../AlgebraicRule.ts";
 
 export class PlusToStar extends AlgebraicRule {
       static apply(expression: RegEx): RegEx | null {
-            if (!(expression instanceof Plus)) return null;
+            if (!(expression instanceof Concatenation)) return null;
 
-            return new Concatenation([
-                  expression.expression,
-                  new Star(expression.expression)
-            ]);
+            const exprs = expression.expressions;
+            if (exprs.length !== 2) return null;
+
+            const [left, right] = exprs;
+
+            // r r*
+            if (right instanceof Star && left.equals(right.expression)) {
+                  return new Plus(left);
+            }
+
+            return null;
       }
 }

@@ -5,5 +5,9 @@ export class LanguageRef extends RegEx {
             super();
       }
 
+      equals(other: RegEx): boolean {
+            return other instanceof LanguageRef && this.name === other.name;
+      }
+
       toString() { return `${this.name}` }
 }

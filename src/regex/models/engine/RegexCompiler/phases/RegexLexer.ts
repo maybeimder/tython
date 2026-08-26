@@ -1,8 +1,8 @@
-import { CharHelper } from "../../../compiler/helpers/CharHelper.ts";
-import { Lexer } from "../../../compiler/Lexer.ts";
-import { TokenType } from "../../../compiler/models/Tokens/Token.ts";
-import { RegEx } from "../regex/RegEx.ts";
-import { RegexToken } from "./RegexToken.ts";
+import { CharHelper } from "../../../../../compiler/helpers/CharHelper.ts";
+import { Lexer } from "../../../../../compiler/Lexer.ts";
+import { TokenType } from "../../../../../compiler/models/Tokens/Token.ts";
+import { RegEx } from "../../../regex/RegEx.ts";
+import { RegexToken } from "../../RegexToken.ts";
 
 export class RegexLexer extends Lexer{
       protected _regexs: RegEx[];

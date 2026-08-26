@@ -5,5 +5,9 @@ export class Optional extends RegEx {
             super();
       }
 
+      equals(other: RegEx): boolean {
+            return other instanceof Optional && this.expression.equals(other.expression);
+      }
+
       toString() { return `${this.expression}?` }
 }
