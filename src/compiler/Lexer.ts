@@ -7,9 +7,9 @@ import { CharHelper } from "./helpers/CharHelper.ts";
 import { Token, TokenType } from "./models/Tokens/Token.ts";
 
 export class Lexer {
-      private _snippet: string;
-      private _tokens: Token[];
-      private _current: number;
+      protected _snippet: string;
+      protected _tokens: Token[];
+      protected _current: number;
 
       constructor(snippet: string) {
             this._snippet = snippet;
@@ -73,6 +73,7 @@ export class Lexer {
 
                   else {
                         console.log("NOT IDENTIFIED")
+                        this.advance();
                   }
 
             }

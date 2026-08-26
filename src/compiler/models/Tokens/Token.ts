@@ -5,6 +5,10 @@ export enum TokenType {
       "Number" = "Number",
       "Operator" = "Operator",
       "Delimiter" = "Delimiter",
+
+      "Reference" = "Reference",
+      "Abreviature" = "Abreviature",
+      "RegexDelimiter" = "RegexDelimiter",
 }
 
 export type TokenTypeMap = {
@@ -12,6 +16,10 @@ export type TokenTypeMap = {
       [TokenType.Identifier] : string;
       [TokenType.Operator]   : string;
       [TokenType.Delimiter]  : string;
+
+      [TokenType.Reference]   : string;
+      [TokenType.Abreviature] : string;
+      [TokenType.Delimiter]   : string;
 }
 
 export class Token {

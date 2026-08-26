@@ -4,13 +4,12 @@ import { IdentifierExpression } from "./models/Expressions/kind/IdentifierExpres
 import { NumericExpression } from "./models/Expressions/kind/NumericExpression.ts";
 import { Operator } from "./models/Operator/Operators.ts";
 import { Token, TokenType } from "./models/Tokens/Token.ts";
-import { BinaryTree } from "./models/Tree/BinaryTree.ts";
 
 
 
 export class Parser {
-      private _tokens: Token[];
-      private _current: number;
+      protected _tokens: Token[];
+      protected _current: number;
 
       constructor() {
             this._tokens = [];
@@ -74,5 +73,5 @@ export class Parser {
       }
 
       get tokens() { return this._tokens }
-      set tokens(tokens: Token[]) { this._tokens = tokens }
+      set tokens(tokens: Token[]) { this._tokens = tokens; this._current=0 }
 }

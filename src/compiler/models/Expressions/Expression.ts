@@ -1,6 +1,7 @@
 import { NumericExpression } from "./kind/NumericExpression.ts"
 import { BinaryExpression } from "./kind/BinaryExpression.ts"
 import { IdentifierExpression } from "./kind/IdentifierExpression.ts"
+import { RegEx } from "../../../regex/models/regex/RegEx.ts"
 
 export interface BaseExpression {
       kind: ExpressionKind,
@@ -10,7 +11,8 @@ export interface BaseExpression {
 export enum ExpressionKind {
       "Numeric",
       "Binary",
-      "Identifier"
+      "Identifier",
+      "Regex"
 }
 
-export type Expression = NumericExpression | BinaryExpression | IdentifierExpression
+export type Expression = NumericExpression | BinaryExpression | IdentifierExpression | RegEx

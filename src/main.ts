@@ -1,10 +1,13 @@
-import { Compiler } from "./core/Compiler.ts"
-import { AstPrinter } from "./core/helpers/ASTPrinter.ts"
-
-const code = "7*a^2/(b^2*3*(5*c/a+9/b^3)+4*c/b)-8*c/d^5"
+import { Compiler } from "./compiler/Compiler.ts"
+import { AstPrinter } from "./compiler/helpers/ASTPrinter.ts"
+import { RegexCompiler } from "./regex/models/engine/RegexCompiler.ts"
 
 const myCompiler = Compiler.instance
-myCompiler.snippet = code
 
+const myRegexCompiler = RegexCompiler.instance
+myRegexCompiler.snippet = "a+ a* | a?"
+console.dir(myRegexCompiler.compile(), { depth: null});
+/*
 const printer = new AstPrinter()
 printer.print(myCompiler.parser.parseExpression())
+*/
