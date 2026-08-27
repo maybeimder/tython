@@ -15,6 +15,10 @@ import { UnionContainment } from "../../../../simplifier/AlgebraicRule/rules/Uni
 import { UnionEpsilon } from "../../../../simplifier/AlgebraicRule/rules/UnionEpsilon.ts";
 import { SimplificationLogger } from "../../../../simplifier/result/SimplificationLogger.ts";
 import { AlgebraicRule } from "../../../../simplifier/AlgebraicRule/AlgebraicRule.ts";
+import { ConcatMerge } from "../../../../simplifier/AlgebraicRule/rules/ConcatMerge.ts";
+import { ConcatEpsilon } from "../../../../simplifier/AlgebraicRule/rules/ConcatEpsilon.ts";
+import { ConcatDistributivity } from "../../../../simplifier/AlgebraicRule/rules/ConcatDistributivity.ts";
+import { UnionOfEquals } from "../../../../simplifier/AlgebraicRule/rules/UnionOfEquals.ts";
 
 export class RegexSimplifier {
       logger: SimplificationLogger | null
@@ -73,13 +77,18 @@ export class RegexSimplifier {
 
                   if (res instanceof Concatenation) {
                         res = this.useRule(ConcatStar, res) ?? res;
+                        res = this.useRule(ConcatEpsilon, res) ?? res;
+                        res = this.useRule(ConcatDistributivity, res) ?? res;
                         // res = ConcatToPlus.apply(res) ?? res;
                   }
                 return res;
             }
 
             if (expression instanceof Union) {
-                  let res =this.useRule(UnionAsociativity, expression) ?? expression;
+                  let res = this.useRule(UnionAsociativity, expression) ?? expression;
+
+                  if (res instanceof Union)
+                              res = this.useRule(UnionOfEquals, res) ?? res;
 
                   if (res instanceof Union)
                            res = this.useRule(UnionContainment, res) ?? res;
@@ -92,6 +101,9 @@ export class RegexSimplifier {
 
             if (expression instanceof Star)
                 return this.useRule(StarIdempotency, expression) ?? expression;
+
+            if (expression instanceof Plus) return expression;
+            if (expression instanceof Optional) return expression;
 
             return expression;
       }

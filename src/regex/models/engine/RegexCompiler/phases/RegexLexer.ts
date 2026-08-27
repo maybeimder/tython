@@ -20,8 +20,8 @@ export class RegexLexer extends Lexer{
       reverse() { return this._snippet.charAt(--this._current) }
 
       extractTokens(): RegexToken[] {
-            this._tokens = []; // Limpiamos tokens anteriores
-            this._current = 0; // Reiniciamos el cursor
+            this._tokens = [];
+            this._current = 0;
 
             while (this._current < this._snippet.length) {
                   let actual = this.peek();
@@ -44,7 +44,7 @@ export class RegexLexer extends Lexer{
                   // '[' ']'
                   else if (CharHelper.isDelimiter(actual)) {
                         this._tokens.push(
-                              new RegexToken(TokenType.Delimiter, actual)
+                              new RegexToken(TokenType.RegexDelimiter, actual)
                         );
                         this.advance();
                         continue;

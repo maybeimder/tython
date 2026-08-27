@@ -11,6 +11,6 @@ export class Union extends RegEx {
                   this.alternatives.every((exp, i) => exp.equals(other.alternatives[i]));
       }
 
-      toString() { return `${this.alternatives.join(" | ")}` }
+      toString() { return `[${this.alternatives.join(" | ")}]` }
 
 }

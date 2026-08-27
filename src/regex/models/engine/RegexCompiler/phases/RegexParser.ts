@@ -24,15 +24,15 @@ export class RegexParser extends Parser {
       parseUnitary(): RegEx {
             const token = this.advance();
 
-            if (token.type === TokenType.Reference) {
+            if (token.type === TokenType.Reference)
                   return new LanguageRef(token.lexeme);
-            }
 
-            if (token.type === TokenType.Delimiter && token.lexeme === "(") {
+
+            if (token.type === TokenType.RegexDelimiter && token.lexeme === "[") {
                   const internalExpression = this.parseExpression();
 
                   const closingParenthesis = this.advance();
-                  if (!closingParenthesis || closingParenthesis.lexeme !== ")") {
+                  if (!closingParenthesis || closingParenthesis.lexeme !== "]") {
                         throw new Error("Expected ')' but not found");
                   }
                   return internalExpression;

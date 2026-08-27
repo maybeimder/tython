@@ -9,7 +9,7 @@ const myCompiler = Compiler.instance
 
 
 const myRegexCompiler = RegexCompiler.instance
-myRegexCompiler.snippet = "a+ a* | a?"
+myRegexCompiler.snippet = "[a+ | a*] a?"
 
 const startRegex = myRegexCompiler.parser.parseExpression();
 myRegexCompiler.simplifier.logger = new SimplificationLogger(startRegex);
