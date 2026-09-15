@@ -1,9 +1,13 @@
-import Node from "./Node.ts";
+import { Node } from "./Node.ts";
 
-export default class Graph<T, W> {
-      private _nodes: Record<string, Node<T>>;
-      private _adjacency_list: Record<string, Record<string, W[] >>;
-      private _isDirected : boolean
+/**
+ * @param NodeLike the type of primitives nodes saves
+ * @param W the type of primitives weight's edges uses to traverse.
+*/
+export default class Graph<NodeLike extends Node<any>, W> {
+      protected _nodes: Record<string, NodeLike>;
+      protected _adjacency_list: Record<string, Record<string, W[] >>;
+      protected _isDirected : boolean
 
       constructor( isDirected : boolean = true ) {
             this._nodes = {};
@@ -11,18 +15,9 @@ export default class Graph<T, W> {
             this._isDirected = isDirected;
       }
 
-      addNode(label:string, arg: T | Node<T>): Node<T> {
-            let node;
-
-            if (arg instanceof Node) {
-                  node = arg;
-            } else {
-                  node = new Node<T>(arg);
-            }
-
-            this._nodes[label] = node
+      addNode(label: string, node: NodeLike): NodeLike {
+            this._nodes[label] = node;
             return node;
-
       }
 
       addEdge(from: string, to: string, weight: W) {

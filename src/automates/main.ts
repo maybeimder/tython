@@ -1,21 +1,20 @@
-import { LanguageRef } from "../regex/models/regex/LanguageRef.ts";
-import { RegEx } from "../regex/models/regex/RegEx.ts";
-import Graph from "./Graph.ts";
-import Node from "./Node.ts";
+import { Alphabet } from "../regex/models/todo/Alphabet.ts";
+import { Automaton } from "./Automaton/Automaton.ts";
+import { State } from "./Automaton/State.ts";
 
-const graph = new Graph<RegEx, LanguageRef>();
+const Σ: Alphabet = new Alphabet(new Set(["a", "b"]))
 
-let aReference = new LanguageRef("a");
-let bReference = new LanguageRef("b");
+const AFND = new Automaton(Σ)
+AFND.addNode("0", new State("0"));
+AFND.addNode("1", new State("1"));
+AFND.addNode("2", new State("2"));
+AFND.addNode("3", new State("3"));
 
-graph.addNode("A", new Node<RegEx>(aReference))
-graph.addNode("B", new Node<RegEx>(aReference))
-graph.addNode("C", new Node<RegEx>(aReference))
-graph.addNode("D", new Node<RegEx>(bReference))
+AFND.addEdge("0", "1", "a")
+AFND.addEdge("0", "0", "a")
+AFND.addEdge("0", "0", "b")
 
-graph.addEdge("A", "B", aReference)
-graph.addEdge("A", "B", bReference)
-graph.addEdge("A", "C", aReference)
-graph.addEdge("C", "D", bReference)
+AFND.addEdge("1", "2", "b")
+AFND.addEdge("2", "3", "b")
 
-console.dir(graph.adjacencyList, {depth:null})
+console.dir(AFND.adjacencyList, { depth: null })

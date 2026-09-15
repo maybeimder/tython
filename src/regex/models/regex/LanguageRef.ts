@@ -1,7 +1,7 @@
 import { RegEx } from "./RegEx.ts";
 
 export class LanguageRef extends RegEx {
-      constructor( public readonly name : string) {
+      constructor( public readonly name : Symbol) {
             super();
       }
 
