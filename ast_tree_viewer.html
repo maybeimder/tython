@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AST Viewer — árbol de expresión</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root{
+    --bg: #0d1117;
+    --panel: #11161d;
+    --panel-border: #202832;
+    --grid: #171d26;
+    --text: #cdd6e0;
+    --text-dim: #6b7685;
+    --num: #7fd88f;
+    --id: #6fb3ff;
+    --op-add: #e8c46b;
+    --op-mul: #e89b6b;
+    --op-pow: #d67fe0;
+    --link: #2a3542;
+    --link-active: #4a5b70;
+    --accent: #e8c46b;
+    --mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "IBM Plex Sans", -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  @font-face{
+    font-family:"JetBrains Mono";
+    src: local("JetBrains Mono");
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:var(--sans); overflow:hidden;
+  }
+  #app{ display:flex; flex-direction:column; height:100vh; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px; border-bottom:1px solid var(--panel-border);
+    background:linear-gradient(180deg, #12181f, #0d1117);
+    flex-shrink:0;
+  }
+  header .title{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  header .title .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+  }
+  header h1{
+    font-size:15px; font-weight:600; margin:0; letter-spacing:0.2px; color:#eef1f5;
+  }
+  header .sub{
+    font-family:var(--mono); font-size:11.5px; color:var(--text-dim);
+  }
+  header .stats{
+    display:flex; gap:18px; font-family:var(--mono); font-size:12px; color:var(--text-dim);
+  }
+  header .stats b{ color:var(--text); font-weight:600; }
+
+  #expr-bar{
+    padding:10px 20px; background:var(--panel); border-bottom:1px solid var(--panel-border);
+    font-family:var(--mono); font-size:13px; line-height:1.5; color:var(--text);
+    overflow-x:auto; white-space:nowrap; flex-shrink:0;
+  }
+  #expr-bar .lbl{ color:var(--text-dim); margin-right:10px; }
+  #expr-bar .n{ color:var(--num); }
+  #expr-bar .i{ color:var(--id); }
+  #expr-bar .o{ color:var(--accent); font-weight:600; }
+  #expr-bar .p{ color:var(--text-dim); }
+
+  #canvas-wrap{ position:relative; flex:1; min-height:0; }
+  svg#tree{ width:100%; height:100%; display:block; cursor:grab; }
+  svg#tree:active{ cursor:grabbing; }
+
+  .bg-grid rect{ fill:var(--bg); }
+
+  .link{
+    fill:none; stroke:var(--link); stroke-width:1.6px;
+  }
+  .link.hi{ stroke:var(--link-active); stroke-width:2.2px; }
+
+  .node{ cursor:pointer; }
+  .node rect{
+    stroke-width:1.4px; rx:7; ry:7;
+  }
+  .node text{
+    font-family:var(--mono); pointer-events:none; dominant-baseline:middle;
+  }
+  .node .main{ font-size:2.1rem; font-weight:700; }
+  .node .meta{ font-size:13px; fill:var(--text-dim); letter-spacing:0.3px; }
+  .node .collapse-badge{
+    font-family:var(--mono); font-size:13px; fill:var(--bg); font-weight:700;
+  }
+
+  .node.kind-binary rect{ fill:#171316; stroke:var(--op-add); }
+  .node.kind-binary.op-mul rect, .node.kind-binary.op-div rect{ stroke:var(--op-mul); }
+  .node.kind-binary.op-pow rect{ stroke:var(--op-pow); }
+  .node.kind-binary .main{ fill:var(--accent); }
+  .node.kind-binary.op-mul .main, .node.kind-binary.op-div .main{ fill:var(--op-mul); }
+  .node.kind-binary.op-pow .main{ fill:var(--op-pow); }
+
+  .node.kind-number rect{ fill:#101a13; stroke:var(--num); }
+  .node.kind-number .main{ fill:var(--num); }
+
+  .node.kind-identifier rect{ fill:#0e1622; stroke:var(--id); }
+  .node.kind-identifier .main{ fill:var(--id); }
+
+  .node:hover rect{ filter: drop-shadow(0 0 6px rgba(255,255,255,0.15)); }
+
+  #legend{
+    position:absolute; bottom:16px; left:16px; background:rgba(17,22,29,0.9);
+    border:1px solid var(--panel-border); border-radius:8px; padding:10px 14px;
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+    display:flex; gap:16px; backdrop-filter: blur(4px);
+  }
+  #legend span{ display:flex; align-items:center; gap:6px; }
+  #legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; border:1.4px solid; }
+  #legend i.add{ border-color:var(--op-add); background:#171316; }
+  #legend i.mul{ border-color:var(--op-mul); background:#171316; }
+  #legend i.pow{ border-color:var(--op-pow); background:#171316; }
+  #legend i.num{ border-color:var(--num); background:#101a13; }
+  #legend i.id{ border-color:var(--id); background:#0e1622; }
+
+  #controls{
+    position:absolute; top:16px; right:16px; display:flex; flex-direction:column; gap:8px;
+  }
+  #controls button{
+    width:32px; height:32px; border-radius:7px; border:1px solid var(--panel-border);
+    background:var(--panel); color:var(--text); font-family:var(--mono); font-size:15px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background 0.15s, border-color 0.15s;
+  }
+  #controls button:hover{ background:#182029; border-color:#33404e; }
+
+  #hint{
+    position:absolute; top:16px; left:16px; font-family:var(--mono); font-size:11px;
+    color:var(--text-dim); background:rgba(17,22,29,0.85); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; max-width:240px; line-height:1.5;
+  }
+  #hint b{ color:var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="title">
+      <span class="dot"></span>
+      <h1>AST Viewer</h1>
+      <span class="sub">main.ts · árbol de expresión</span>
+    </div>
+    <div class="stats">
+      <div>nodos <b id="stat-nodes">–</b></div>
+      <div>profundidad <b id="stat-depth">–</b></div>
+      <div>hojas <b id="stat-leaves">–</b></div>
+    </div>
+  </header>
+
+  <div id="expr-bar"><span class="lbl">expresión</span><span id="expr-text"></span></div>
+
+  <div id="canvas-wrap">
+    <svg id="tree"></svg>
+
+    <div id="hint">
+      <b>Click</b> en un nodo para colapsar/expandir su subárbol · <b>arrastrar</b> para mover · <b>rueda</b> para zoom
+    </div>
+
+    <div id="controls">
+      <button id="zoom-in" title="Acercar">+</button>
+      <button id="zoom-out" title="Alejar">−</button>
+      <button id="zoom-reset" title="Restablecer">⤢</button>
+      <button id="expand-all" title="Expandir todo">▾</button>
+      <button id="collapse-all" title="Colapsar todo">▸</button>
+    </div>
+
+    <div id="legend">
+      <span><i class="add"></i>+ / −</span>
+      <span><i class="mul"></i>× / ÷</span>
+      <span><i class="pow"></i>^</span>
+      <span><i class="num"></i>número</span>
+      <span><i class="id"></i>identificador</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------
+// 1. Datos del AST (reconstruidos a partir de la salida de main.ts)
+// ---------------------------------------------------------------
+const raw = {
+  kind:"binary", op:"-",
+  left: {
+    kind:"binary", op:"+",
+    left: {
+      kind:"binary", op:"*",
+      left: {
+        kind:"binary", op:"/",
+        left: { kind:"binary", op:"*",
+          left:{kind:"number", value:6},
+          right:{kind:"id", name:"a"} },
+        right: { kind:"binary", op:"^",
+          left:{kind:"id", name:"b"},
+          right:{kind:"number", value:3} }
+      },
+      right: {kind:"id", name:"c"}
+    },
+    right: {
+      kind:"binary", op:"*",
+      left: { kind:"binary", op:"*",
+        left:{kind:"number", value:4},
+        right:{kind:"binary", op:"^", left:{kind:"id", name:"b"}, right:{kind:"number", value:2}} },
+      right: {
+        kind:"binary", op:"-",
+        left: {
+          kind:"binary", op:"*",
+          left: { kind:"binary", op:"*",
+            left:{kind:"number", value:2},
+            right:{kind:"binary", op:"^", left:{kind:"id", name:"d"}, right:{kind:"number", value:4}} },
+          right: {
+            kind:"binary", op:"-",
+            left: { kind:"binary", op:"*",
+              left:{kind:"number", value:5},
+              right:{kind:"binary", op:"^",
+                left:{kind:"id", name:"b"},
+                right:{kind:"binary", op:"^", left:{kind:"number", value:4}, right:{kind:"number", value:2}}}
+            },
+            right: { kind:"binary", op:"*",
+              left:{kind:"binary", op:"/", left:{kind:"number", value:9}, right:{kind:"id", name:"c"}},
+              right:{kind:"binary", op:"^", left:{kind:"id", name:"d"}, right:{kind:"number", value:3}}
+            }
+          }
+        },
+        right: { kind:"binary", op:"/",
+          left:{kind:"binary", op:"*", left:{kind:"number", value:7}, right:{kind:"binary", op:"^", left:{kind:"id", name:"a"}, right:{kind:"number", value:2}}},
+          right:{kind:"id", name:"c"}
+        }
+      }
+    }
+  },
+  right: {
+    kind:"binary", op:"/",
+    left: { kind:"binary", op:"*",
+      left:{kind:"number", value:9},
+      right:{kind:"binary", op:"^", left:{kind:"id", name:"d"}, right:{kind:"number", value:2}} },
+    right: {kind:"number", value:3}
+  }
+};
+
+const PRECEDENCE = { "+":2, "-":2, "*":3, "/":3, "^":4 };
+const RIGHT_ASSOC = { "^":true };
+
+// ---------------------------------------------------------------
+// 2. Convertir a formato de jerarquía D3 + generar etiquetas
+// ---------------------------------------------------------------
+function opClass(op){
+  if(op === "*" || op === "/") return "op-mul";
+  if(op === "^") return "op-pow";
+  return "op-add";
+}
+
+function toD3(node){
+  if(node.kind === "number"){
+    return { type:"number", label: String(node.value), meta:"num", children: null };
+  }
+  if(node.kind === "id"){
+    return { type:"identifier", label: node.name, meta:"id", children: null };
+  }
+  // binary
+  return {
+    type:"binary",
+    op: node.op,
+    label: node.op,
+    meta: opClass(node.op).replace("op-",""),
+    children: [ toD3(node.left), toD3(node.right) ]
+  };
+}
+
+// Expresión infix con paréntesis mínimos, para la barra superior
+function toInfix(node, parentPrec = 0, isRightChild = false){
+  if(node.kind === "number") return { text:String(node.value), cls:"n" };
+  if(node.kind === "id") return { text:node.name, cls:"i" };
+  const prec = PRECEDENCE[node.op];
+  const l = toInfix(node.left, prec, false);
+  const r = toInfix(node.right, prec, true);
+  const needsParens = prec < parentPrec || (prec === parentPrec && isRightChild && !RIGHT_ASSOC[node.op]);
+  const inner = [l, {text:` ${node.op} `, cls:"o"}, r];
+  return { group: inner, cls: needsParens ? "p" : null };
+}
+
+function renderInfix(node){
+  if(node.text !== undefined){
+    return `<span class="${node.cls}">${node.text}</span>`;
+  }
+  const body = node.group.map(renderInfix).join("");
+  return node.cls === "p" ? `<span class="p">(</span>${body}<span class="p">)</span>` : body;
+}
+
+document.getElementById("expr-text").innerHTML = renderInfix(toInfix(raw));
+
+// Stats
+function countStats(node){
+  if(!node.children) return {nodes:1, depth:1, leaves:1};
+  const l = countStats(node.children[0]);
+  const r = countStats(node.children[1]);
+  return { nodes: l.nodes + r.nodes + 1, depth: Math.max(l.depth, r.depth) + 1, leaves: l.leaves + r.leaves };
+}
+const treeDataRoot = toD3(raw);
+const stats = countStats(treeDataRoot);
+document.getElementById("stat-nodes").textContent = stats.nodes;
+document.getElementById("stat-depth").textContent = stats.depth;
+document.getElementById("stat-leaves").textContent = stats.leaves;
+
+// ---------------------------------------------------------------
+// 3. Layout y render con D3
+// ---------------------------------------------------------------
+const svg = d3.select("#tree");
+const gZoom = svg.append("g");
+const gLinks = gZoom.append("g").attr("class", "links-layer");
+const gNodes = gZoom.append("g").attr("class", "nodes-layer");
+
+const NODE_W = 130, NODE_H = 92, V_GAP = 60, H_GAP = 26;
+
+let root = d3.hierarchy(treeDataRoot, d => d.children);
+root.x0 = 0;
+root.y0 = 0;
+
+// Collapse a partir de profundidad 4 por defecto para que el árbol grande sea manejable al abrir
+root.each(d => {
+  if(d.depth >= 3 && d.children){
+    d._children = d.children;
+    d.children = null;
+  }
+});
+
+const treeLayout = d3.tree().nodeSize([NODE_W + H_GAP, NODE_H + V_GAP]);
+
+function diagonal(s, d){
+  return `M ${s.x} ${s.y}
+          C ${s.x} ${(s.y + d.y) / 2},
+            ${d.x} ${(s.y + d.y) / 2},
+            ${d.x} ${d.y}`;
+}
+
+function update(source){
+  const treeData = treeLayout(root);
+  const nodes = treeData.descendants();
+  const links = treeData.links();
+
+  // ---- Links ----
+  const link = gLinks.selectAll("path.link").data(links, d => d.target.data.__id || (d.target.data.__id = Math.random()));
+
+  const linkEnter = link.enter().append("path")
+    .attr("class", "link")
+    .attr("d", d => {
+      const o = {x: source.x0 ?? source.x, y: source.y0 ?? source.y};
+      return diagonal(o, o);
+    });
+
+  linkEnter.merge(link)
+    .transition().duration(400)
+    .attr("d", d => diagonal(d.source, d.target));
+
+  link.exit()
+    .transition().duration(300)
+    .attr("d", d => {
+      const o = {x: source.x, y: source.y};
+      return diagonal(o, o);
+    })
+    .remove();
+
+  // ---- Nodes ----
+  const node = gNodes.selectAll("g.node").data(nodes, d => d.data.__id || (d.data.__id = Math.random()));
+
+  const nodeEnter = node.enter().append("g")
+    .attr("class", d => `node kind-${d.data.type} ${d.data.type === "binary" ? "op-" + d.data.meta : ""}`)
+    .attr("transform", d => `translate(${source.x0 ?? source.x},${source.y0 ?? source.y})`)
+    .style("opacity", 0)
+    .on("click", (event, d) => {
+      if(d.children){
+        d._children = d.children;
+        d.children = null;
+      } else if(d._children){
+        d.children = d._children;
+        d._children = null;
+      } else {
+        return; // hoja, nada que colapsar
+      }
+      update(d);
+    });
+
+  nodeEnter.append("rect")
+    .attr("width", NODE_W)
+    .attr("height", NODE_H)
+    .attr("x", -NODE_W/2)
+    .attr("y", -NODE_H/2);
+
+  nodeEnter.append("text")
+    .attr("class", "main")
+    .attr("text-anchor", "middle")
+    .attr("y", d => (d.data.type === "binary" ? -14 : 2))
+    .text(d => d.data.type === "binary" ? opSymbol(d.data.op) : d.data.label);
+
+  nodeEnter.filter(d => d.data.type === "binary").append("text")
+    .attr("class", "meta")
+    .attr("text-anchor", "middle")
+    .attr("y", 22)
+    .text(d => opName(d.data.op));
+
+  // badge que indica subárbol colapsado
+  nodeEnter.append("circle")
+    .attr("class", "badge-circle")
+    .attr("r", 8)
+    .attr("cx", NODE_W/2 - 4)
+    .attr("cy", -NODE_H/2 + 4)
+    .style("fill", "var(--accent)")
+    .style("display", d => d._children ? null : "none");
+
+  nodeEnter.append("text")
+    .attr("class", "collapse-badge")
+    .attr("text-anchor", "middle")
+    .attr("x", NODE_W/2 - 4)
+    .attr("y", -NODE_H/2 + 4)
+    .attr("dy", "0.32em")
+    .text(d => d._children ? countLeaves(d) : "")
+    .style("display", d => d._children ? null : "none");
+
+  const nodeUpdate = nodeEnter.merge(node);
+
+  nodeUpdate.transition().duration(400)
+    .attr("transform", d => `translate(${d.x},${d.y})`)
+    .style("opacity", 1);
+
+  nodeUpdate.select("circle.badge-circle")
+    .style("display", d => d._children ? null : "none");
+  nodeUpdate.select("text.collapse-badge")
+    .text(d => d._children ? countLeaves(d) : "")
+    .style("display", d => d._children ? null : "none");
+
+  const nodeExit = node.exit()
+    .transition().duration(300)
+    .attr("transform", d => `translate(${source.x},${source.y})`)
+    .style("opacity", 0)
+    .remove();
+
+  nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+}
+
+function countLeaves(d){
+  const src = d._children || d.children || [];
+  let c = 0;
+  function walk(n){
+    if(!n.children){ c++; return; }
+    n.children.forEach(walk);
+  }
+  const fake = {children: (d._children || []).map(c => c)};
+  if(d._children){
+    // count descendants nodes in collapsed subtree (using data, not hierarchy)
+    function walkData(n){
+      c++;
+      if(n.children) n.children.forEach(walkData);
+    }
+    d._children.forEach(ch => walkData(ch.data));
+  }
+  return c;
+}
+
+function opSymbol(op){
+  return op;
+}
+function opName(op){
+  switch(op){
+    case "+": return "Add";
+    case "-": return "Subtract";
+    case "*": return "Multiply";
+    case "/": return "Divide";
+    case "^": return "Power";
+    default: return "";
+  }
+}
+
+update(root);
+
+// ---------------------------------------------------------------
+// 4. Zoom / pan
+// ---------------------------------------------------------------
+const zoomBehavior = d3.zoom()
+  .scaleExtent([0.25, 2.5])
+  .on("zoom", (event) => {
+    gZoom.attr("transform", event.transform);
+  });
+
+svg.call(zoomBehavior);
+
+function fitToScreen(animate = true){
+  const bounds = gZoom.node().getBBox();
+  const wrap = document.getElementById("canvas-wrap");
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if(bounds.width === 0 || bounds.height === 0) return;
+  const scale = Math.min(0.9, 0.9 / Math.max(bounds.width / w, bounds.height / h));
+  const tx = w/2 - (bounds.x + bounds.width/2) * scale;
+  const ty = h/2 - (bounds.y + bounds.height/2) * scale;
+  const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+  (animate ? svg.transition().duration(500) : svg).call(zoomBehavior.transform, t);
+}
+
+// esperar a que el primer layout termine antes de centrar
+setTimeout(() => fitToScreen(false), 50);
+window.addEventListener("resize", () => fitToScreen(false));
+
+document.getElementById("zoom-in").onclick = () => svg.transition().duration(200).call(zoomBehavior.scaleBy, 1.3);
+document.getElementById("zoom-out").onclick = () => svg.transition().duration(200).call(zoomBehavior.scaleBy, 1/1.3);
+document.getElementById("zoom-reset").onclick = () => fitToScreen(true);
+
+document.getElementById("expand-all").onclick = () => {
+  root.each(d => {
+    if(d._children){ d.children = d._children; d._children = null; }
+  });
+  update(root);
+  setTimeout(() => fitToScreen(true), 420);
+};
+
+document.getElementById("collapse-all").onclick = () => {
+  root.each(d => {
+    if(d.depth >= 1 && d.children){
+      d._children = d.children;
+      d.children = null;
+    }
+  });
+  update(root);
+  setTimeout(() => fitToScreen(true), 420);
+};
+</script>
+</body>
+</html>

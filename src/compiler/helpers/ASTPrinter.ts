@@ -6,6 +6,7 @@ import { NumericExpression } from "../models/Expressions/kind/NumericExpression.
 
 export class AstPrinter {
       print(node: Expression): void {
+            console.dir(node, {depth:null})
             this.printNode(node, "", true, true);
       }
 
