@@ -16,3 +16,5 @@ export class Alphabet {
 }
 
 export type AlphabetSymbol = string
+export type EpsilonSymbol = null;
+export type AutomatonSymbol = AlphabetSymbol | EpsilonSymbol

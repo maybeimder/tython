@@ -1,12 +1,14 @@
 import { LanguageRef } from "../../regex/models/regex/LanguageRef.ts";
-import { Alphabet, AlphabetSymbol } from "../../regex/models/todo/Alphabet.ts";
+import { Alphabet, AutomatonSymbol } from "../../regex/models/todo/Alphabet.ts";
 import Graph from "../Graph.ts";
+import { StateIDGenerator } from "./constructors/StateIDGenerator.ts";
 import { State } from "./State.ts";
 
-export class Automaton extends Graph<State, AlphabetSymbol> {
+export class Automaton extends Graph<State, AutomatonSymbol> {
       private _alphabet: Alphabet;
       private _initialStateIdx: string | null;
       private _finalStateIdx: string | null;
+      private _stateLabeler = new StateIDGenerator();
 
       constructor(alphabet: Alphabet) {
             super();
@@ -15,11 +17,22 @@ export class Automaton extends Graph<State, AlphabetSymbol> {
             this._finalStateIdx = null;
       }
 
-      override addEdge(from: string, to: string, symbol: AlphabetSymbol): void {
-            const alphabetSymbol = this._alphabet.get(symbol);
+      override addEdge(from: string, to: string, symbol: AutomatonSymbol): void {
+            if (symbol === null) {
+                  super.addEdge(from, to, null);
+                  return;
+            }
 
-            if (!symbol) return;
+            const automatonSymbol = this._alphabet.get(symbol);
+            if (!automatonSymbol) return;
+
             super.addEdge(from, to, symbol);
+      }
+
+      createState(): string {
+            const id = this._stateLabeler.next();
+            this.addNode(id, new State(id));
+            return id;
       }
 
       private get _states(): Record<string, State> {

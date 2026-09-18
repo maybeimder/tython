@@ -12,7 +12,7 @@ printer.print(myCompiler.parser.parseExpression())
 */
 
 const myRegexCompiler = RegexCompiler.instance
-myRegexCompiler.snippet = "a? a* b+ b? b a+ a?"
+myRegexCompiler.snippet = "a? a* a+ a?"
 
 const startRegex = myRegexCompiler.parser.parseExpression();
 myRegexCompiler.simplifier.logger = new SimplificationLogger(startRegex);
