@@ -116,6 +116,25 @@ export class ThompsonConstructor {
             return new Fragment(start, end);
       }
 
-      private constructOptional(automaton:Automaton, node: Optional):Fragment { }
+      private constructOptional(automaton: Automaton, node: Optional): Fragment {
+            const fragment = this.build(automaton, node.expression);
+
+            const start = automaton.createState();
+            const end = automaton.createState();
+
+            // i -> ir con Epsilon
+            automaton.addEdge(start, fragment.left, null);
+
+            // i -> f con Epsilon
+            automaton.addEdge(start, end, null);
+
+            // El ciclo fr -> ir
+            automaton.addEdge(fragment.right, fragment.left, null);
+
+            // fr -> f
+            automaton.addEdge( fragment.right, end, null);
+
+            return new Fragment(start, end);
+      }
 
 }
