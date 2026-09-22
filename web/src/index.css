@@ -1,16 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-      --color-surface: #100F0F
+      --color-surface: var(--bg-surface);
+      --color-surface-lighter: var(--bg-surface-lighter);
+      --color-foreground: var(--text-foreground);
+      --color-subforeground: var(--text-sub);
+      --color-muted: var(--text-muted);
 }
 
-* {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-}
+@layer base {
+      :root {
+            --bg-surface: #eeeeee;
+            --bg-surface-lighter: #ffffff;
+            --text-foreground: #222222;
+            --text-sub: #666666;
+            --text-muted: #979797;
+      }
 
-html, root, #root {
-      width: 100%;
-      height: 100%;
+      .dark {
+            --bg-surface: #1a1a1a;
+            --bg-surface-lighter: #2a2a2a;
+            --text-foreground: #eeeeee;
+            --text-sub: #aaaaaa;
+            --text-muted: #777777;
+      }
+
+      * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #root {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-surface);
+            color: var(--text-foreground);
+      }
+
+      ::selection{
+            background-color: #ddd;
+      }
 }
