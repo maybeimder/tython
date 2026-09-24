@@ -9,7 +9,7 @@
 }
 
 @layer base {
-      :root {
+      .dark {
             --bg-surface: #eeeeee;
             --bg-surface-lighter: #ffffff;
             --text-foreground: #222222;
@@ -17,7 +17,7 @@
             --text-muted: #979797;
       }
 
-      .dark {
+      :root {
             --bg-surface: #1a1a1a;
             --bg-surface-lighter: #2a2a2a;
             --text-foreground: #eeeeee;
