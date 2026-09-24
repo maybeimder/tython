@@ -12,7 +12,7 @@ export default function EdgeLayer({ edges }: { edges: EdgeRepresentation[] }) {
                               id="arrow"
                               markerWidth="10"
                               markerHeight="10"
-                              refX="9"
+                              refX="12"
                               refY="3"
                               orient="auto"
                               markerUnits="strokeWidth"

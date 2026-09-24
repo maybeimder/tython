@@ -1,24 +1,15 @@
-import { Concatenation } from "../../../regex/models/regex/Concatenation.ts";
-import { Epsilon } from "../../../regex/models/regex/Epsilon.ts";
-import { LanguageRef } from "../../../regex/models/regex/LanguageRef.ts";
-import { Optional } from "../../../regex/models/regex/Optional.ts";
-import { Plus } from "../../../regex/models/regex/Plus.ts";
-import { RegEx } from "../../../regex/models/regex/RegEx.ts";
-import { Star } from "../../../regex/models/regex/Star.ts";
-import { Union } from "../../../regex/models/regex/Union.ts";
-import { Automaton } from "../Automaton.ts";
+import { Concatenation } from "../../../../regex/models/regex/Concatenation.ts";
+import { Epsilon } from "../../../../regex/models/regex/Epsilon.ts";
+import { LanguageRef } from "../../../../regex/models/regex/LanguageRef.ts";
+import { Optional } from "../../../../regex/models/regex/Optional.ts";
+import { Plus } from "../../../../regex/models/regex/Plus.ts";
+import { RegEx } from "../../../../regex/models/regex/RegEx.ts";
+import { Star } from "../../../../regex/models/regex/Star.ts";
+import { Union } from "../../../../regex/models/regex/Union.ts";
+import { Automaton } from "../../Automaton.ts";
+import { Fragment, GraphConstructor } from "../GraphConstructor.ts";
 
-export class Fragment {
-      readonly left: string;
-      readonly right: string;
-
-      constructor(left: string, right: string) {
-            this.left = left;
-            this.right = right;
-      }
-}
-
-export class ThompsonConstructor {
+export class ThompsonConstructor implements GraphConstructor<Automaton, RegEx> {
 
       public build(automaton:Automaton, node: RegEx): Fragment {
             if (node instanceof Epsilon)        return this.constructEpsilon(automaton, node);

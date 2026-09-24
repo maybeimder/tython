@@ -6,15 +6,15 @@ import { State } from "./State.ts";
 
 export class Automaton extends Graph<State, AutomatonSymbol> {
       private _alphabet: Alphabet;
-      private _initialStateIdx: string | null;
-      private _finalStateIdx: string | null;
+      public initialStateIdx: string | null;
+      public finalStateIdxs: Set<string> = new Set<string>();
       private _stateLabeler = new StateIDGenerator();
 
       constructor(alphabet: Alphabet) {
             super();
             this._alphabet = alphabet;
-            this._initialStateIdx = null;
-            this._finalStateIdx = null;
+            this.initialStateIdx = null;
+            this.finalStateIdxs = new Set<string>();
       }
 
       override addEdge(from: string, to: string, symbol: AutomatonSymbol): void {
@@ -35,10 +35,27 @@ export class Automaton extends Graph<State, AutomatonSymbol> {
             return id;
       }
 
-      private get _states(): Record<string, State> {
+      public get states(): Record<string, State> {
             return this._nodes;
       }
-      private set _states(states: Record<string, State>) {
+
+      private set states(states: Record<string, State>) {
             this._nodes = states;
+      }
+
+      private set _finalStates(finalStates: Set<string>) {
+            this.finalStateIdxs = finalStates;
+      }
+
+      private get _finalStates(): Set<string> {
+            return this.finalStateIdxs;
+      }
+
+      private set _initialState(initialState: string | null) {
+            this.initialStateIdx = initialState;
+      }
+
+      private get _initialState(): string | null {
+            return this.initialStateIdx;
       }
 }
