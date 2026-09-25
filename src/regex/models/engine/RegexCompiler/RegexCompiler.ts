@@ -6,6 +6,7 @@ import { RegexParser } from "./phases/RegexParser.ts";
 import { RegexSimplifier } from "./phases/RegexSimplifier.ts";
 
 export class RegexCompiler extends Compiler {
+      protected _expression: RegEx | undefined;
       protected static _instance: RegexCompiler;
       protected override _parser: RegexParser;
       protected override _lexer: RegexLexer;
@@ -30,8 +31,22 @@ export class RegexCompiler extends Compiler {
             this._lexer.snippet = this._snippet;
             this._lexer.extractTokens();
             this._parser.tokens = this._lexer.tokens;
+            this._expression = this._parser.parseExpression();
 
-            return this._simplifier.simplify(this._parser.parseExpression())
+            return this._simplifier.simplify(this._expression)
+      }
+
+      public simplify(snippet?: string): RegEx | undefined {
+            if (!snippet && !this._snippet) throw new Error("No se encontró snippet para simplificar");
+            if (!snippet) return this.compile();
+
+            const temp = this._snippet;
+            this._snippet = snippet;
+
+            const result = this.compile();
+
+            this._snippet = temp;
+            return result;
       }
 
       public static override get instance(): RegexCompiler {

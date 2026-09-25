@@ -12,11 +12,14 @@ printer.print(myCompiler.parser.parseExpression())
 */
 
 const myRegexCompiler = RegexCompiler.instance
-myRegexCompiler.snippet = "a? a* a+ a?"
+myRegexCompiler.snippet = "[a [b a* b | a+ b]*]|[b a* b [ b a* b | a+ b]*]"
 
 const startRegex = myRegexCompiler.parser.parseExpression();
+/*
+console.dir(startRegex, { depth: null })
+*/
 myRegexCompiler.simplifier.logger = new SimplificationLogger(startRegex);
-const resultRegex = myRegexCompiler.compile();
+const resultRegex = myRegexCompiler.simplify();
 
 if (resultRegex)
       console.log(SimplificationPrinter.print(myRegexCompiler.simplifier.logger.getResult(resultRegex)));

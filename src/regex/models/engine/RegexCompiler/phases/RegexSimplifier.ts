@@ -19,6 +19,7 @@ import { ConcatMerge } from "../../../../simplifier/AlgebraicRule/rules/ConcatMe
 import { ConcatEpsilon } from "../../../../simplifier/AlgebraicRule/rules/ConcatEpsilon.ts";
 import { ConcatDistributivity } from "../../../../simplifier/AlgebraicRule/rules/ConcatDistributivity.ts";
 import { UnionOfEquals } from "../../../../simplifier/AlgebraicRule/rules/UnionOfEquals.ts";
+import { StarOfRuns } from "../../../../simplifier/AlgebraicRule/rules/StarOfRuns.ts";
 
 export class RegexSimplifier {
       logger: SimplificationLogger | null
@@ -58,13 +59,14 @@ export class RegexSimplifier {
 
       useRule = (rule: typeof AlgebraicRule, target: RegEx): RegEx | null => {
             const res = rule.apply(target);
+            if (res === null || res.equals(target)) return null;
             if (res !== null && this.logger) this.logger.logStep(target, res, rule);
             return res
       };
 
       private simplifyUsingRules(expression: RegEx): RegEx {
             if (expression instanceof LanguageRef)
-                return expression;
+                  return expression;
 
             if (expression instanceof Plus)
                   return this.useRule(PlusToStar, expression) ?? expression;
@@ -72,35 +74,29 @@ export class RegexSimplifier {
             if (expression instanceof Optional)
                   return this.useRule(OptionalToUnion, expression) ?? expression;
 
-            if (expression instanceof Concatenation) {
-                  let res = this.useRule(ConcatAsociativity, expression) ?? expression;
-
-                  if (res instanceof Concatenation) {
-                        res = this.useRule(ConcatStar, res) ?? res;
-                        res = this.useRule(ConcatEpsilon, res) ?? res;
-                        res = this.useRule(ConcatDistributivity, res) ?? res;
-                        // res = ConcatToPlus.apply(res) ?? res;
+            if (expression instanceof Star){
+                  for (const rule of [StarOfRuns, StarIdempotency]) {
+                        const res = this.useRule(rule, expression);
+                        if (res !== null) return res;
                   }
-                return res;
+                  return expression;
+            }
+
+            if (expression instanceof Concatenation) {
+                  for (const rule of [ConcatAsociativity, ConcatStar, ConcatMerge, ConcatEpsilon]) {
+                        const res = this.useRule(rule, expression);
+                        if (res !== null) return res;
+                  }
+                  return this.tryDistribute(expression) ?? expression;
             }
 
             if (expression instanceof Union) {
-                  let res = this.useRule(UnionAsociativity, expression) ?? expression;
-
-                  if (res instanceof Union)
-                              res = this.useRule(UnionOfEquals, res) ?? res;
-
-                  if (res instanceof Union)
-                           res = this.useRule(UnionContainment, res) ?? res;
-
-                  if (res instanceof Union)
-                           res = this.useRule(UnionEpsilon, res) ?? res;
-
-                  return res;
+                  for (const rule of [UnionAsociativity, UnionOfEquals, UnionContainment, UnionEpsilon]) {
+                        const res = this.useRule(rule, expression);
+                        if (res !== null) return res;
+                  }
+                  return expression;
             }
-
-            if (expression instanceof Star)
-                return this.useRule(StarIdempotency, expression) ?? expression;
 
             if (expression instanceof Plus) return expression;
             if (expression instanceof Optional) return expression;
@@ -111,5 +107,24 @@ export class RegexSimplifier {
 
       private equals(a: RegEx, b: RegEx): boolean {
             return a.equals(b);
+      }
+
+      private size(e: RegEx): number {
+            return e.toString().length;
+      }
+
+      private tryDistribute(expr: Concatenation): RegEx | null {
+            const distributed = ConcatDistributivity.apply(expr);
+            if (distributed === null) return null;
+
+            const logger = this.logger;
+            this.logger = null;
+            const simplified = this.simplify(distributed);
+            this.logger = logger;
+
+            if (this.size(simplified) >= this.size(expr)) return null;
+
+            if (this.logger) this.logger.logStep(expr, simplified, ConcatDistributivity);
+            return simplified;
       }
 }

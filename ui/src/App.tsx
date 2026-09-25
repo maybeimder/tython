@@ -6,11 +6,16 @@ import EngineTranslator from "../core/EngineTranslator";
 const api = new EngineTranslator();
 
 api.graphConstructor = new MinimalDFAConstructor();
-api.setRegexSnippet("[a|b]* a b b", "A", ["D"]);
+api.setRegexSnippet("b+ a+ b+");
 const graph = api.translate();
 
 console.dir(graph, { depth: null })
 
 export default function App() {
-      return <div className="w-screen h-screen"> <GraphEditor automaton={graph} /> </div>
+      return (
+            <div className="w-screen h-screen">
+                  <GraphEditor automaton={graph} />
+            </div>
+      )
+
 }

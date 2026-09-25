@@ -4,6 +4,8 @@ import { Star } from "../../../models/regex/Star.ts";
 import { Plus } from "../../../models/regex/Plus.ts";
 import { Optional } from "../../../models/regex/Optional.ts";
 import { AlgebraicRule } from "../AlgebraicRule.ts";
+import { Union } from "../../../models/regex/Union.ts";
+import { Epsilon } from "../../../models/regex/Epsilon.ts";
 
 export class ConcatMerge extends AlgebraicRule {
       static override apply(expression: RegEx): RegEx | null {
@@ -20,6 +22,13 @@ export class ConcatMerge extends AlgebraicRule {
                         if (node instanceof Star) return { base: node.expression, mod: 'star' };
                         if (node instanceof Plus) return { base: node.expression, mod: 'plus' };
                         if (node instanceof Optional) return { base: node.expression, mod: 'optional' };
+
+                        // [x | ε]  ≡  x?
+                        if (node instanceof Union && node.alternatives.some(a => a instanceof Epsilon)) {
+                              const rest = node.alternatives.filter(a => !(a instanceof Epsilon));
+                              if (rest.length > 0)
+                                    return { base: rest.length === 1 ? rest[0] : new Union(rest), mod: 'optional' };
+                        }
                         return { base: node, mod: 'exact' };
                   };
 
@@ -28,22 +37,23 @@ export class ConcatMerge extends AlgebraicRule {
 
                   if (l.base.equals(r.base)) {
                         const base = l.base;
-                        let merged: RegEx | null = null;
+                        let merged: RegEx[] | null = null;
 
                         // r* · r* = r*
-                        if (l.mod === 'star' && r.mod === 'star') merged = new Star(base);
+                        if (l.mod === 'star' && r.mod === 'star') merged = [new Star(base)];
                         // r · r* = r+  |  r* · r = r+
-                        else if ((l.mod === 'exact' && r.mod === 'star') || (l.mod === 'star' && r.mod === 'exact')) merged = new Plus(base);
+                        //else if ((l.mod === 'exact' && r.mod === 'star') || (l.mod === 'star' && r.mod === 'exact')) merged = new Plus(base);
                         // r+ · r* = r+  |  r* · r+ = r+
-                        else if ((l.mod === 'plus' && r.mod === 'star') || (l.mod === 'star' && r.mod === 'plus')) merged = new Plus(base);
+                        // else if ((l.mod === 'plus' && r.mod === 'star') || (l.mod === 'star' && r.mod === 'plus')) merged = new Plus(base);
                         // r* · r? = r*  |  r? · r* = r*
-                        else if ((l.mod === 'star' && r.mod === 'optional') || (l.mod === 'optional' && r.mod === 'star')) merged = new Star(base);
+                        else if ((l.mod === 'star' && r.mod === 'optional') || (l.mod === 'optional' && r.mod === 'star')) merged = [new Star(base)];
                         // r+ · r? = r+  |  r? · r+ = r+
-                        else if ((l.mod === 'plus' && r.mod === 'optional') || (l.mod === 'optional' && r.mod === 'plus')) merged = new Plus(base);
+                        // else if ((l.mod === 'plus' && r.mod === 'optional') || (l.mod === 'optional' && r.mod === 'plus')) merged = new Plus(base);
+                        else if (l.mod === 'star' && r.mod === 'exact') merged = [base, new Star(base)];
 
                         if (merged) {
                               const newExprs = [...exprs];
-                              newExprs.splice(i, 2, merged);
+                              newExprs.splice(i, 2, ...merged);
                               return newExprs.length === 1 ? newExprs[0] : new Concatenation(newExprs);
                         }
                   }

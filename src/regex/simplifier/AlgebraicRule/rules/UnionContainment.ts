@@ -5,6 +5,51 @@ import { AlgebraicRule } from "../AlgebraicRule.ts";
 import { Star } from "../../../models/regex/Star.ts";
 import { Concatenation } from "../../../models/regex/Concatenation.ts";
 import { Optional } from "../../../models/regex/Optional.ts";
+import { Epsilon } from "../../../models/regex/Epsilon.ts";
+
+
+export type Run = { base: RegEx; min: number; max: number };
+
+function toRun(node: RegEx): Run {
+      if (node instanceof Star) return { base: node.expression, min: 0, max: Infinity };
+      if (node instanceof Plus) return { base: node.expression, min: 1, max: Infinity };
+      if (node instanceof Optional) return { base: node.expression, min: 0, max: 1 };
+      if (node instanceof Union && node.alternatives.some(a => a instanceof Epsilon)) {
+            const rest = node.alternatives.filter(a => !(a instanceof Epsilon));
+            if (rest.length > 0)
+                  return { base: rest.length === 1 ? rest[0] : new Union(rest), min: 0, max: 1 };
+      }
+      return { base: node, min: 1, max: 1 };
+}
+
+export function toRuns(node: RegEx): Run[] {
+      const items = node instanceof Concatenation ? node.expressions : [node];
+      const runs: Run[] = [];
+      for (const item of items) {
+            const r = toRun(item);
+            const last = runs[runs.length - 1];
+            if (last && last.base.equals(r.base)) {
+                  last.min += r.min;
+                  last.max += r.max;
+            } else runs.push({ ...r });
+      }
+      return runs;
+}
+
+export function fromRuns(runs: Run[]): RegEx[] {
+      const out: RegEx[] = [];
+      for (const { base, min, max } of runs) {
+            for (let i = 0; i < min; i++) out.push(base);
+            if (max === Infinity) out.push(new Star(base));
+            else for (let i = min; i < max; i++) out.push(new Union([base, new Epsilon()]));
+      }
+      return out;
+}
+
+export function runsContained(a: Run[], b: Run[]): boolean {
+      return a.length === b.length && a.every((r, i) =>
+            r.base.equals(b[i].base) && r.min >= b[i].min && r.max <= b[i].max);
+}
 
 export class UnionContainment extends AlgebraicRule {
 
@@ -41,36 +86,6 @@ export class UnionContainment extends AlgebraicRule {
       }
 
       private static isContained(a: RegEx, b: RegEx): boolean {
-            const getBase = (exp: RegEx): { base: RegEx, min: number } => {
-                  if (exp instanceof Star) return { base: exp.expression, min: 0 };
-                  if (exp instanceof Optional) return { base: exp.expression, min: 0 };
-                  if (exp instanceof Plus) return { base: exp.expression, min: 1 };
-                  return { base: exp, min: 1 };
-            };
-
-            const analyze = (exp: RegEx): { base: RegEx, min: number } | null => {
-                  const list = exp instanceof Concatenation ? exp.expressions : [exp];
-                  if (list.length === 0) return null;
-
-                  const firstInfo = getBase(list[0]);
-                  let totalMin = 0;
-
-                  for (const item of list) {
-                        const info = getBase(item);
-                        if (!info.base.equals(firstInfo.base)) return null;
-                        totalMin += info.min;
-                  }
-
-                  return { base: firstInfo.base, min: totalMin };
-            };
-
-            const infoA = analyze(a);
-            const infoB = analyze(b);
-
-            if (infoA && infoB && infoA.base.equals(infoB.base)) {
-                  if (infoA.min >= infoB.min) return true;
-            }
-
-            return false;
+            return runsContained(toRuns(a), toRuns(b))
       }
 }

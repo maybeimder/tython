@@ -68,15 +68,7 @@ export class RegexParser extends Parser {
       private parseConcatenation(): RegEx {
             let left = this.parsePostfix();
 
-            while (
-                  !this.isAtEnd() &&
-                  this.peek().lexeme !== "|" &&
-                  this.peek().lexeme !== ")" &&
-                  (
-                        this.peek().type === TokenType.Reference ||
-                        (this.peek().type === TokenType.Delimiter && this.peek().lexeme === "(")
-                  )
-            ) {
+            while (this.canStartUnitary()) {
                   const right = this.parsePostfix();
                   left = new Concatenation([left, right]);
             }
@@ -94,6 +86,21 @@ export class RegexParser extends Parser {
             }
 
             return left;
+      }
+
+      private canStartUnitary(): boolean {
+            if (this.isAtEnd())
+                  return false;
+
+            const token = this.peek();
+
+            return (
+                  token.type === TokenType.Reference ||
+                  (
+                        token.type === TokenType.RegexDelimiter &&
+                        token.lexeme === "["
+                  )
+            );
       }
 
       public parseExpression(): RegEx {
