@@ -384,6 +384,7 @@ export class MinimalDFAConstructor implements GraphConstructor<Automaton, RegEx>
       // (una arista ausente ya significa "rechazar")
       // ---------------------------------------------------------------
 
+
       private materialize(
             automaton: Automaton,
             minimized: ReturnType<typeof this.minimize>,
@@ -416,15 +417,19 @@ export class MinimalDFAConstructor implements GraphConstructor<Automaton, RegEx>
                   realId.get(c)!,
             );
 
-            if (acceptingReal.length === 1) {
-                  return new Fragment(start, acceptingReal[0]);
-            }
-
-            const end = automaton.createState();
+            // Marca TODOS los estados de aceptación directamente en el
+            // automaton -- sin nodo sintético, sin aristas null.
             for (const acceptingId of acceptingReal) {
-                  automaton.addEdge(acceptingId, end, null);
+                  automaton.finalStateIdxs.add(acceptingId);
             }
 
-            return new Fragment(start, end);
+            // Fragment sigue exigiendo un único `.right` por compatibilidad
+            // con el resto del sistema (Thompson, etc. que sí lo necesitan
+            // para poder concatenar fragmentos). Como los finales reales ya
+            // quedaron registrados arriba, cuál de ellos se use aquí no
+            // afecta el reconocimiento del lenguaje -- es solo un valor de
+            // "salida representativa" para quien consuma el Fragment.
+            return new Fragment(start, acceptingReal[0]);
       }
+
 }

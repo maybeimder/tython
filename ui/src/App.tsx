@@ -1,21 +1,18 @@
+import { useState } from "react";
 import GraphEditor from "./views/GraphEditor";
-import { MinimalDFAConstructor } from "../../src/automates/Automaton/constructors/DFA/MinimalConstructor"
-import { MinimalNFAConstructor } from "../../src/automates/Automaton/constructors/NFA/MinimalNFAConstructor"
-import EngineTranslator from "../core/EngineTranslator";
-
-const api = new EngineTranslator();
-
-api.graphConstructor = new MinimalDFAConstructor();
-api.setRegexSnippet("b+ a+ b+");
-const graph = api.translate();
-
-console.dir(graph, { depth: null })
+import AppInput from "./AppInput";
+import { GraphRepresentation } from "./models/representations/GraphRepresentation";
 
 export default function App() {
-      return (
-            <div className="w-screen h-screen">
-                  <GraphEditor automaton={graph} />
-            </div>
-      )
+      const [graph, setGraph] = useState<GraphRepresentation | null>(null);
 
+      return (
+            <div className="w-screen h-screen flex flex-col">
+                  <AppInput onGraphChange={setGraph} />
+
+                  <div className="relative flex-1">
+                        {graph && <GraphEditor automaton={graph} />}
+                  </div>
+            </div>
+      );
 }

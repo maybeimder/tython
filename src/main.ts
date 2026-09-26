@@ -12,7 +12,7 @@ printer.print(myCompiler.parser.parseExpression())
 */
 
 const myRegexCompiler = RegexCompiler.instance
-myRegexCompiler.snippet = "[a [b a* b | a+ b]*]|[b a* b [ b a* b | a+ b]*]"
+myRegexCompiler.snippet = "[b [[a a* b b* a]|[b b* a]]* a a*]|[a b* a [[a a* b b* a]|[b b* a]]* a a* ]"
 
 const startRegex = myRegexCompiler.parser.parseExpression();
 /*

@@ -20,8 +20,10 @@ import { ConcatEpsilon } from "../../../../simplifier/AlgebraicRule/rules/Concat
 import { ConcatDistributivity } from "../../../../simplifier/AlgebraicRule/rules/ConcatDistributivity.ts";
 import { UnionOfEquals } from "../../../../simplifier/AlgebraicRule/rules/UnionOfEquals.ts";
 import { StarOfRuns } from "../../../../simplifier/AlgebraicRule/rules/StarOfRuns.ts";
+import { UnionFactor } from "../../../../simplifier/AlgebraicRule/rules/UnionFactor.ts";
 
 export class RegexSimplifier {
+      private inTrial: boolean = false;
       logger: SimplificationLogger | null
 
       constructor() { this.logger = null }
@@ -91,7 +93,8 @@ export class RegexSimplifier {
             }
 
             if (expression instanceof Union) {
-                  for (const rule of [UnionAsociativity, UnionOfEquals, UnionContainment, UnionEpsilon]) {
+                  for (const rule of [UnionAsociativity, UnionOfEquals, UnionContainment, UnionEpsilon, UnionFactor]) {
+                        if (rule === UnionFactor && this.inTrial) continue;
                         const res = this.useRule(rule, expression);
                         if (res !== null) return res;
                   }
@@ -113,14 +116,23 @@ export class RegexSimplifier {
             return e.toString().length;
       }
 
+
       private tryDistribute(expr: Concatenation): RegEx | null {
+            if (this.inTrial) return null;                 // nada de pruebas anidadas
+
             const distributed = ConcatDistributivity.apply(expr);
             if (distributed === null) return null;
 
             const logger = this.logger;
             this.logger = null;
-            const simplified = this.simplify(distributed);
-            this.logger = logger;
+            this.inTrial = true;
+            let simplified: RegEx;
+            try {
+                  simplified = this.simplify(distributed);
+            } finally {
+                  this.inTrial = false;
+                  this.logger = logger;
+            }
 
             if (this.size(simplified) >= this.size(expr)) return null;
 

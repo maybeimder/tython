@@ -1,4 +1,5 @@
 import { Automaton } from "../../src/automates/Automaton/Automaton";
+import { MinimalDFAConstructor } from "../../src/automates/Automaton/constructors/DFA/MinimalConstructor";
 import { GraphConstructor } from "../../src/automates/Automaton/constructors/GraphConstructor";
 import { GlushkovConstructor } from "../../src/automates/Automaton/constructors/NFA/GlushkowConstructor";
 import { ThompsonConstructor } from "../../src/automates/Automaton/constructors/NFA/ThompsonConstructor";
@@ -31,12 +32,12 @@ export default class EngineTranslator {
 
       private _automaton: Automaton | null = null;
       private _constructor: GraphConstructor<Automaton, RegEx> =
-            new ThompsonConstructor();
+            new MinimalDFAConstructor();
 
       private _graphRepresentation: GraphRepresentation | null = null;
 
       constructor(alphabet?: Alphabet) {
-            this._alphabet = alphabet ?? new Alphabet(new Set(["a", "b"]));
+            this._alphabet = alphabet ?? new Alphabet(new Set(["a", "b", "z"]));
             this._automaton = new Automaton(this._alphabet);
       }
 
@@ -47,7 +48,7 @@ export default class EngineTranslator {
                   );
 
             const nodes = this.translateAllNodes(this._automaton);
-            console.log(nodes, this._automaton.states);
+            console.log(nodes, this._automaton.adjacencyList);
             const edges = this.translateAllEdges(this._automaton, nodes);
 
             this._graphRepresentation = new GraphRepresentation(nodes, edges);
