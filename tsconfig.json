@@ -8,13 +8,13 @@
             "target": "esnext",
             "types": [],
 
-            // Other Outputs
             "sourceMap": true,
 
             "strict": true,
             "esModuleInterop": true,
             "skipDefaultLibCheck": true,
             "allowImportingTsExtensions": true,
+            "rewriteRelativeImportExtensions": true, // <-- AGREGA ESTA LÍNEA
       },
       "include": ["src"],
 }

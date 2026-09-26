@@ -1,9 +1,12 @@
 {
       "compilerOptions": {
+            "allowImportingTsExtensions": true,
             "target": "ES2022",
             "module": "ESNext",
-            "moduleResolution": "Bundler",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
+            "noEmit": true,
+            "types": ["vite/client"],
             "strict": true,
             "esModuleInterop": true,
             "skipLibCheck": true,
