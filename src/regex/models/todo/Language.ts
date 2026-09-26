@@ -10,9 +10,8 @@ export class Language {
       }
 
       union(language: Language) {
-            const union_symbols = [
-                  ...new Set([...this._alphabet.symbols, ...language._alphabet.symbols])
-            ]
+            const union_symbols = new Set<string>(this._alphabet.symbols);
+            language._alphabet.symbols.forEach(symbol => union_symbols.add(symbol));
 
             const union_strings = [
                   ...new Set([...this._strings, ...language._strings])

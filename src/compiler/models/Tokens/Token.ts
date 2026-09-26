@@ -19,7 +19,6 @@ export type TokenTypeMap = {
 
       [TokenType.Reference]   : string;
       [TokenType.Abreviature] : string;
-      [TokenType.Delimiter]   : string;
 }
 
 export class Token {

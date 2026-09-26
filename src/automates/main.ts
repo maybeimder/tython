@@ -2,8 +2,8 @@ import { RegexCompiler } from "../regex/models/engine/RegexCompiler/RegexCompile
 import { RegEx } from "../regex/models/regex/RegEx.ts";
 import { Alphabet } from "../regex/models/todo/Alphabet.ts";
 import { Automaton } from "./Automaton/Automaton.ts";
-import { GlushkovConstructor } from "./Automaton/constructors/GlushkowConstructor.ts";
-import { ThompsonConstructor } from "./Automaton/constructors/ThompsonConstructor.ts";
+import { GlushkovConstructor } from "./Automaton/constructors/NFA/GlushkowConstructor.ts";
+import { ThompsonConstructor } from "./Automaton/constructors/NFA/ThompsonConstructor.ts";
 import { State } from "./Automaton/State.ts";
 
 const myRegexCompiler = RegexCompiler.instance
